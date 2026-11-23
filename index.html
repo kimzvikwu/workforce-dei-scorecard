@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workforce DEI Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: clinical, newspaper-graphics desk; the finding first, method visible.
+   IDEA: an atlas plate — companies laid on one shared 0–100 axis.
+   PICTURE: ranked score bars, each split into its age and gender components.
+   COLOUR and TYPE: deep sea ground, sky for age, signal pink for gender, white ink; Hanken Grotesk 300/600.
+   LAYOUT: three strips on one axis — ranking (tallest), data & settings, detail table & method. */
+:root{color-scheme:dark;--bg:#0a2540;--panel:#0f3157;--line:#24507d;--ink:#fff;--mute:#a9c3dc;--sky:#8fd3ff;--pink:#ff5c8a;--warn:#ffd27a}
+:root[data-theme=light],:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Hanken Grotesk",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,64px) max(5vw,16px)}.wrap{max-width:1240px;margin:0 auto}
+.band+.band{border-top:1px solid var(--line)}
+h1{font-weight:300;font-size:clamp(32px,5vw,52px);line-height:1.05;margin:0 0 10px;text-wrap:balance}
+h2{font-weight:600;font-size:22px;margin:0 0 14px}h3{font-size:17px;margin:18px 0 8px}
+p{max-width:70ch;margin:0 0 12px}.mute{color:var(--mute)}.small{font-size:13px}
+.lede{color:var(--mute);font-size:17px;max-width:70ch}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin:16px 0 8px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.rank{display:grid;gap:6px;margin-top:6px}
+.row{display:grid;grid-template-columns:minmax(120px,240px) minmax(0,1fr) 64px;gap:14px;align-items:center;padding:8px 10px;border-radius:8px;cursor:pointer;background:none;border:1px solid transparent;color:inherit;font:inherit;text-align:left;min-height:52px;width:100%}
+.row:hover,.row:focus-visible,.row.sel{background:var(--panel);border-color:var(--line);outline:none}
+.row .nm{font-weight:600;line-height:1.2}.row .nm small{display:block;color:var(--mute);font-weight:400;font-size:13px}
+.track{position:relative;height:26px;background:#0d2e52;border-radius:4px;overflow:hidden}
+.seg{position:absolute;top:0;bottom:0}.seg.a{left:0;background:var(--sky)}.seg.g{background:var(--pink)}.seg.s{background:#fff}
+.tick{position:absolute;top:-4px;bottom:-4px;width:1px;background:#ffffff55}
+.score{font-size:26px;font-weight:300;text-align:right;font-variant-numeric:tabular-nums}
+.flag{color:var(--warn);font-size:12px;font-weight:600}
+.axis{display:grid;grid-template-columns:minmax(120px,240px) minmax(0,1fr) 64px;gap:14px;padding:0 10px;font-size:12px;color:var(--mute)}
+.axis div:nth-child(2){display:flex;justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+input,select,textarea,button{font:inherit;font-size:16px}
+input[type=number],select,textarea{width:100%;background:#0a2540;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:44px}
+input[type=file]{max-width:100%;color:var(--mute)}
+textarea{min-height:120px;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+.btn{background:var(--sky);color:#0a2540;border:0;border-radius:6px;padding:10px 16px;min-height:44px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--sky);border:1px solid var(--line)}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.status{font-size:13px;color:var(--mute);margin-top:10px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:13px;color:var(--mute);font-weight:600;cursor:pointer;user-select:none}
+th:first-child,td:first-child{text-align:left}
+.drill{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px}
+.hist{display:grid;gap:4px}.hrow{display:grid;grid-template-columns:56px minmax(0,1fr) 44px;gap:8px;align-items:center;font-size:13px}
+.hbar{height:16px;background:var(--sky);border-radius:2px}.hrow span:last-child{text-align:right;color:var(--mute)}
+.gbar{display:flex;height:30px;border-radius:4px;overflow:hidden;margin:8px 0}
+.gbar div{display:flex;align-items:center;justify-content:center;font-size:12px;color:#0a2540;font-weight:600;white-space:nowrap;overflow:hidden}
+details{margin-top:10px}summary{cursor:pointer;color:var(--sky);min-height:44px;display:flex;align-items:center}
+ul{padding-left:20px;max-width:75ch}li{margin-bottom:6px}
+pre,.scroll{overflow-x:auto}code{overflow-wrap:anywhere;background:#0d2e52;padding:1px 5px;border-radius:3px;font-size:14px}
+@media(max-width:600px){.row,.axis{grid-template-columns:minmax(0,1fr) 52px;}.row .track,.axis div:nth-child(2){grid-column:1/-1;grid-row:2}.axis div:first-child{display:none}.score{font-size:22px}table{font-size:13px}.two{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:no-preference){.seg{transition:width .5s ease,left .5s ease}}
+</style></head><body>
+
+<section class="band"><div class="wrap">
+  <h1 id="headline">Workforce age &amp; gender scorecard</h1>
+  <p class="lede">Each company's score blends how well it employs people 40 and over (age) with how close it is to gender parity. Ages are estimated from bachelor's graduation year (age 21 at graduation), or first job start year if there's no degree. Gender is inferred from first names using US Social Security birth records, and scored twice: across all staff and within STEM roles.</p>
+  <div class="legend"><span><i class="sw" style="background:var(--sky)"></i>Age component</span><span><i class="sw" style="background:var(--pink)"></i>Gender, overall</span><span><i class="sw" style="background:#fff"></i>Gender, STEM roles</span><span><i class="sw" style="background:var(--warn)"></i>⚠ = sample too small to trust</span></div>
+  <div class="axis"><div></div><div><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div><div style="text-align:right">Score</div></div>
+  <div class="rank" id="rank"></div>
+  <p class="small mute" id="srcnote" style="margin-top:10px"></p>
+</div></section>
+
+<section class="band" id="detail-band" hidden><div class="wrap">
+  <h2 id="dtitle"></h2>
+  <div class="drill">
+    <div><h3>Estimated age distribution</h3><div class="hist" id="hist"></div><p class="small mute" id="agenote" style="margin-top:8px"></p></div>
+    <div><h3>Inferred gender, all staff</h3><div class="gbar" id="gbar"></div><div id="gsrc" class="small mute"></div>
+    <h3>Inferred gender, STEM roles</h3><div class="gbar" id="sbar"></div><div id="ssrc" class="small mute"></div></div>
+  </div>
+</div></section>
+
+<section class="band"><div class="wrap grid">
+  <div class="card">
+    <h2>Load employee data</h2>
+    <p class="small mute">CSV with one row per employee. Needed: company plus a name. Useful: ticker, job title (for the STEM indicator), bachelor's graduation year, first job start year/date, pronouns, self-reported gender. Everything runs in your browser — nothing is uploaded.</p>
+    <label for="file">CSV file</label><input type="file" id="file" accept=".csv,text/csv">
+    <label for="paste">…or paste CSV</label><textarea id="paste" placeholder="company,ticker,name,bachelor_grad_year,first_job_year,pronouns"></textarea>
+    <div class="btns"><button class="btn" id="loadPaste">Use pasted data</button><button class="btn ghost" id="loadSample">Reload sample</button></div>
+    <div id="mapping"></div>
+    <div class="status" id="status"></div>
+  </div>
+  <div class="card">
+    <h2>Scoring settings</h2>
+    <div class="two">
+      <div><label for="asof">Ages as of year</label><input type="number" id="asof"></div>
+      <div><label for="minn">Min. sample for confidence</label><input type="number" id="minn" value="30" min="1"></div>
+      <div><label for="fthr">Female if name is ≥ % female</label><input type="number" id="fthr" value="90" min="51" max="100"></div>
+      <div><label for="mthr">Male if name is ≤ % female</label><input type="number" id="mthr" value="10" min="0" max="49"></div>
+      <div><label for="b40">Benchmark: share 40+ (%)</label><input type="number" id="b40" value="50" min="1" max="100"></div>
+      <div><label for="b55">Benchmark: share 55+ (%)</label><input type="number" id="b55" value="24" min="1" max="100"></div>
+      <div><label for="wa">Weight: age</label><input type="number" id="wa" value="40" min="0"></div>
+      <div><label for="wg">Weight: gender, overall</label><input type="number" id="wg" value="30" min="0"></div>
+      <div><label for="ws">Weight: gender, STEM roles</label><input type="number" id="ws" value="30" min="0"></div>
+    </div>
+    <p class="small mute" style="margin-top:12px">Names between the two thresholds (Taylor, Casey, Jordan, Jessie…) count as undetermined unless pronouns, a self-reported gender, an honorific (Ms./Mr.) or an unambiguous middle name settles it. The 55+ default is BLS's share of employed people aged 55 and over (2019); the 40+ default is a placeholder — set it to your peer benchmark.</p>
+  </div>
+</div></section>
+
+<section class="band"><div class="wrap">
+  <h2>All companies</h2>
+  <div class="scroll"><table id="tbl"><thead><tr>
+    <th data-k="company">Company</th><th data-k="n">Employees</th><th data-k="ageCov">Age known</th><th data-k="medAge">Median age</th><th data-k="s40">40+</th><th data-k="s55">55+</th><th data-k="gCov">Gender known</th><th data-k="women">Women</th><th data-k="stemN">STEM staff</th><th data-k="stemWomen">Women in STEM</th><th data-k="ageScore">Age score</th><th data-k="genScore">Gender score</th><th data-k="stemScore">STEM score</th><th data-k="score">DEI score</th>
+  </tr></thead><tbody></tbody></table></div>
+  <div class="btns"><button class="btn ghost" id="copyCsv">Copy results as CSV</button><span class="status" id="copyMsg"></span></div>
+
+  <h3>How the score works</h3>
+  <ul>
+    <li><b>Age.</b> Estimated age = 21 + (as-of year − bachelor's graduation year). With no graduation year, the first job start year stands in for age 21. Estimates under 18 or over 85 are discarded. Age score = average of (share 40+ ÷ benchmark) and (share 55+ ÷ benchmark), each capped at 100.</li>
+    <li><b>Gender.</b> Order of evidence: self-reported gender → pronouns (she/he/they) → honorific → first name → middle name. A name counts as female or male only if US births 1940–2006 carrying it were at or beyond your thresholds; non-US names not in SSA data fall back to an international name dictionary. Gender score = 100 × (non-male share ÷ 50%), capped at 100, so parity scores 100.</li>
+    <li><b>STEM.</b> A role counts as STEM when its job title matches technical keywords (engineer, developer, data scientist, security analyst, DevOps, IT, scientist, CTO/CISO…) and isn't a business role (sales, recruiting, marketing, finance, HR, legal — though "sales engineer" stays STEM). An optional STEM column (yes/no) overrides the title match. STEM score uses the same parity formula as overall gender, applied only to STEM staff; ⚠ marks companies with fewer STEM staff of known gender than your confidence minimum.</li>
+    <li><b>DEI score</b> = weighted average of the three parts. A company with no title data is scored on the parts it has. Shares use only employees whose age or gender could be determined; coverage columns show how many that is.</li>
+    <li><b>Known biases.</b> Graduation-year ages run young for people who finished college late or changed careers, and first-job years run old for people who started working before 21. Name inference under-counts women with less common or non-Western names (more of them land in "undetermined") and cannot see non-binary people unless pronouns are listed. Treat the score as a screening signal, not a finding about any individual.</li>
+  </ul>
+  <details><summary>Expected CSV columns</summary>
+  <p class="small">Headers are matched loosely, and you can re-map them after loading. Example:</p>
+  <pre><code>company,ticker,name,title,bachelor_grad_year,first_job_year,pronouns,gender
+Example Corp,EXMP,Jordan Ellis,Senior Software Engineer,2004,2003,,
+Example Corp,EXMP,"Ms. Casey Morgan",VP Marketing,,1991,she/her,</code></pre>
+  <p class="small">Dates like <code>2004-05-15</code> or ranges like <code>2000 – 2004</code> are fine; the last year of a degree range and the earliest year of a job are used.</p></details>
+</div></section>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const FIELDS=[["company","Company",/company|employer|organi[sz]ation|^org$/i],["ticker","Ticker",/ticker|symbol/i],["name","Full name",/^(full[ _]?)?name$|full.?name|employee.?name/i],["first","First name (optional)",/^first.?name$|given/i],["grad","Bachelor's grad year",/grad|bachelor|degree|class.?of|education.?end/i],["job","First job start",/first.?(job|position|role|exp)|career.?start|earliest/i],["pron","Pronouns",/pronoun/i],["gender","Self-reported gender",/^(gender|sex)$/i],["title","Job title",/^(job.?|current.?)?title$|^position$|^role$|occupation|job.?function/i],["stem","STEM flag (optional)",/^(is.?)?stem$/i]];
+const STEM_IN=/engineer|engineering|developer|programmer|software|devops|dev.?sec.?ops|\bsre\b|site reliability|data scien|data analyst|data architect|analytics engineer|machine learning|\bml\b|\bai\b|artificial intelligence|scientist|research(er)?\b.*(scien|lab|engineer)|chemist|physicist|biolog|bioinformatic|statistic|mathemat|actuar|cyber|information security|infosec|security (analyst|architect|operations|researcher)|penetration|\bsoc\b|network|sysadmin|systems? admin|database|\bdba\b|cloud|infrastructure|platform|\bqa\b|quality assurance|\bsdet\b|test automation|architect(?!ure firm)|\bcto\b|\bciso\b|\bcio\b|chief (technology|information|security|data)|technical lead|tech lead|\bit\b (support|specialist|manager|director|analyst)|help ?desk|firmware|hardware|electrical|mechanical|lab technician|technologist/i;
+const STEM_OUT=/sales(?! engineer)|account (executive|manager)|recruit|talent|marketing|people partner|human resources|\bhr\b|legal|counsel|paralegal|finance|accountant|accounting|customer success|office manager|administrative assistant|executive assistant|landscape architect|brand/i;
+const isStem=(title,flag)=>{const f=String(flag||"").trim().toLowerCase();if(/^(y|yes|true|1|stem)$/.test(f))return true;if(/^(n|no|false|0)$/.test(f))return false;const t=String(title||"");return!!t&&(STEM_IN.test(t)||/\bIT\b|\bI\.T\.|\bICT\b/.test(t))&&!STEM_OUT.test(t)};
+let NAMES={s:{},g:{}},rows=[],headers=[],map={},results=[],sortK="score",sortDir=-1,selected=null,sampleMode=true;
+$("#asof").value=new Date().getFullYear();
+
+const parseCSV=t=>{const out=[];let r=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}else if(c=='"')q=true;else if(c==','){r.push(f);f=""}else if(c=='\n'||c=='\r'){if(c=='\r'&&t[i+1]=='\n')i++;r.push(f);f="";if(r.some(x=>x.trim()))out.push(r);r=[]}else f+=c}r.push(f);if(r.some(x=>x.trim()))out.push(r);return out};
+const years=v=>(String(v||"").match(/\b(19[3-9]\d|20[0-4]\d)\b/g)||[]).map(Number);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const pctF=n=>{n=(n||"").toLowerCase().replace(/[^a-z]/g,"");if(!n)return null;if(n in NAMES.s)return[NAMES.s[n],"ssa"];if(n in NAMES.g)return[NAMES.g[n],"intl"];return null};
+const HON_F=/^(ms|mrs|miss|madam|mme|sra|frau)\.?$/i,HON_M=/^(mr|sir|sr|herr|m)\.?$/i,SKIP=/^(dr|prof|rev|hon|capt|col|maj|gen|lt|sgt)\.?$/i;
+function inferGender(r,cfg){
+  const g=(r.gender||"").trim().toLowerCase();
+  if(g){if(/^(f|female|woman|w)$/.test(g))return["f","self"];if(/^(m|male|man)$/.test(g))return["m","self"];if(/non.?binary|nb|enby|genderqueer|other/.test(g))return["x","self"]}
+  const p=(r.pron||"").toLowerCase();
+  if(p){if(/^\s*she/.test(p))return["f","pronouns"];if(/^\s*he\b/.test(p))return["m","pronouns"];if(/they|xe|ze/.test(p))return["x","pronouns"]}
+  let full=(r.name||"").replace(/\(.*?\)|".*?"/g," ").split(",")[0].trim();
+  let toks=full.split(/\s+/).filter(Boolean);
+  while(toks.length&&(HON_F.test(toks[0])||HON_M.test(toks[0])||SKIP.test(toks[0]))){if(HON_F.test(toks[0]))return["f","honorific"];if(HON_M.test(toks[0])&&toks[0].toLowerCase()!=="m")return["m","honorific"];toks.shift()}
+  const cands=[];if(r.first)cands.push(r.first.split(/[\s-]/)[0]);
+  toks.slice(0,Math.max(1,toks.length-1)).forEach(t=>{if(!/^[A-Za-z]\.?$/.test(t))cands.push(t.split("-")[0])});
+  let i=0;for(const c of cands.slice(0,2)){const v=pctF(c);if(v){const[pf,src]=v;if(pf>=cfg.fthr)return["f",i?"middle name":src];if(pf<=cfg.mthr)return["m",i?"middle name":src]}i++}
+  return["u",cands.length&&pctF(cands[0])?"ambiguous name":"unknown name"];
+}
+function inferAge(r,asof){
+  const gy=years(r.grad),jy=years(r.job);let y=null,src=null;
+  if(gy.length){y=Math.max(...gy);src="grad"}else if(jy.length){y=Math.min(...jy);src="job"}
+  if(y==null)return[null,null];const a=21+asof-y;return a<18||a>85?[null,null]:[a,src];
+}
+const cfg=()=>({asof:+$("#asof").value||new Date().getFullYear(),minn:+$("#minn").value||30,fthr:+$("#fthr").value||90,mthr:+$("#mthr").value||10,b40:(+$("#b40").value||50)/100,b55:(+$("#b55").value||24)/100,wa:+$("#wa").value,wg:+$("#wg").value,ws:+$("#ws").value});
+
+function compute(){
+  const c=cfg(),by={};
+  for(const raw of rows){const r={};for(const[k]of FIELDS)r[k]=map[k]!=null&&map[k]>=0?raw[map[k]]:"";
+    const co=(r.company||"").trim();if(!co)continue;const key=co.toLowerCase();
+    const b=by[key]||(by[key]={company:co,ticker:"",ages:[],ageSrc:{grad:0,job:0},g:{f:0,m:0,x:0,u:0},sg:{f:0,m:0,x:0,u:0},gSrc:{},n:0,titled:0,stemN:0});
+    if(r.ticker&&!b.ticker)b.ticker=r.ticker.trim().toUpperCase();b.n++;
+    const[a,as]=inferAge(r,c.asof);if(a!=null){b.ages.push(a);b.ageSrc[as]++}
+    const[g,gs]=inferGender(r,c);b.g[g]++;b.gSrc[gs]=(b.gSrc[gs]||0)+1;
+    if((r.title||"").trim()||(r.stem||"").trim())b.titled++;
+    if(isStem(r.title,r.stem)){b.stemN++;b.sg[g]++}}
+  results=Object.values(by).map(b=>{
+    const na=b.ages.length,s40=na?b.ages.filter(a=>a>=40).length/na:0,s55=na?b.ages.filter(a=>a>=55).length/na:0;
+    const srt=[...b.ages].sort((x,y)=>x-y),med=na?(na%2?srt[(na-1)/2]:(srt[na/2-1]+srt[na/2])/2):null;
+    const ng=b.g.f+b.g.m+b.g.x,women=ng?b.g.f/ng:0,nonmale=ng?(b.g.f+b.g.x)/ng:0;
+    const ageScore=na?100*(Math.min(1,s40/c.b40)+Math.min(1,s55/c.b55))/2:null,genScore=ng?100*Math.min(1,nonmale/.5):null;
+    const nsg=b.sg.f+b.sg.m+b.sg.x,stemWomen=nsg?b.sg.f/nsg:null,stemScore=nsg?100*Math.min(1,(b.sg.f+b.sg.x)/nsg/.5):null;
+    const ea=ageScore!=null?c.wa:0,eg=genScore!=null?c.wg:0,es=stemScore!=null?c.ws:0,tw=ea+eg+es;
+    const score=tw?((ageScore??0)*ea+(genScore??0)*eg+(stemScore??0)*es)/tw:null;
+    return{...b,na,ng,nsg,ageCov:na/b.n,gCov:ng/b.n,medAge:med,s40,s55,women,stemShare:b.titled?b.stemN/b.titled:null,stemWomen,ageScore,genScore,stemScore,score,low:na<c.minn||ng<c.minn,stemLow:nsg>0&&nsg<c.minn,ea,eg,es,tw};
+  });
+  render();
+}
+const pct=v=>v==null?"–":Math.round(v*100)+"%",num=v=>v==null?"–":Math.round(v);
+function render(){
+  const ranked=[...results].sort((a,b)=>(b.score??-1)-(a.score??-1));
+  $("#rank").innerHTML=ranked.length?ranked.map(r=>{const tot=Math.max(1,r.tw),aw=(r.ageScore??0)*r.ea/tot,gw=(r.genScore??0)*r.eg/tot,sw=(r.stemScore??0)*r.es/tot;
+    return`<button class="row${selected===r.company?" sel":""}" data-c="${esc(r.company)}" aria-label="${esc(r.company)} score ${num(r.score)}"><span class="nm">${esc(r.company)}<small>${esc(r.ticker||"")}${r.ticker?" · ":""}${r.n.toLocaleString()} people${r.low?' · <span class="flag">⚠ small sample</span>':""}${r.stemScore==null?" · no STEM data":""}</small></span><span class="track"><span class="seg a" style="width:${aw}%"></span><span class="seg g" style="left:${aw}%;width:${gw}%"></span><span class="seg s" style="left:${aw+gw}%;width:${sw}%"></span>${[25,50,75].map(t=>`<i class="tick" style="left:${t}%"></i>`).join("")}</span><span class="score">${r.low?'<span class="flag">⚠</span> ':""}${num(r.score)}</span></button>`}).join(""):'<p class="mute">No companies yet — load a CSV below.</p>';
+  if(ranked.length){const top=ranked[0],bot=ranked[ranked.length-1];$("#headline").textContent=ranked.length>1?`${top.company} leads at ${num(top.score)}; ${bot.company} trails at ${num(bot.score)}`:`${top.company} scores ${num(top.score)}`}
+  $("#srcnote").textContent=sampleMode?"Sample data: fictional companies with generated employees, so you can see how it works. Load your own CSV below.":`${rows.length.toLocaleString()} employee rows across ${results.length} companies.`;
+  const sorted=[...results].sort((a,b)=>{const x=a[sortK],y=b[sortK];return(typeof x==="string"?x.localeCompare(y):(x??-1)-(y??-1))*sortDir});
+  $("#tbl tbody").innerHTML=sorted.map(r=>`<tr><td>${esc(r.company)}${r.ticker?` <span class="mute small">${esc(r.ticker)}</span>`:""}</td><td>${r.n.toLocaleString()}</td><td>${pct(r.ageCov)}</td><td>${num(r.medAge)}</td><td>${pct(r.s40)}</td><td>${pct(r.s55)}</td><td>${pct(r.gCov)}</td><td>${pct(r.women)}</td><td>${r.stemN?r.stemN.toLocaleString():"–"}</td><td>${pct(r.stemWomen)}${r.stemLow?' <span class="flag">⚠</span>':""}</td><td>${num(r.ageScore)}</td><td>${num(r.genScore)}</td><td>${num(r.stemScore)}</td><td><b>${num(r.score)}</b>${r.low?' <span class="flag">⚠</span>':""}</td></tr>`).join("");
+  drill();
+}
+function drill(){
+  const r=results.find(x=>x.company===selected)||null;$("#detail-band").hidden=!r;if(!r)return;
+  $("#dtitle").textContent=`${r.company}${r.ticker?" ("+r.ticker+")":""}: age ${num(r.ageScore)}, gender ${num(r.genScore)}, STEM gender ${num(r.stemScore)}`;
+  const sseg=[["Women",r.sg.f,"var(--pink)"],["Men",r.sg.m,"var(--sky)"],["Non-binary",r.sg.x,"#c9b6ff"],["Undetermined",r.sg.u,"#5d7a99"]];
+  $("#sbar").innerHTML=r.stemN?sseg.filter(s=>s[1]).map(([l,v,c])=>`<div style="width:${100*v/r.stemN}%;background:${c}" title="${l}: ${v}">${100*v/r.stemN>12?l+" "+Math.round(100*v/r.stemN)+"%":""}</div>`).join(""):"";
+  $("#ssrc").textContent=r.stemN?`${r.stemN} of ${r.titled} people with a job title are in STEM roles (${pct(r.stemShare)}). `+sseg.map(([l,v])=>`${l}: ${v}`).join(" · ")+(r.stemLow?" — ⚠ too few to trust.":""):r.titled?"No titles matched STEM roles.":"No job-title column mapped, so there's no STEM breakdown.";
+  const bins=[[18,29],[30,39],[40,49],[50,54],[55,64],[65,85]],cnt=bins.map(([lo,hi])=>r.ages.filter(a=>a>=lo&&a<=hi).length),mx=Math.max(1,...cnt);
+  $("#hist").innerHTML=bins.map(([lo,hi],i)=>`<div class="hrow"><span>${lo===65?"65+":lo+"–"+hi}</span><div class="hbar" style="width:${100*cnt[i]/mx}%;${lo>=40?"":"opacity:.55"}"></div><span>${cnt[i]}</span></div>`).join("");
+  $("#agenote").textContent=`${r.na} of ${r.n} ages estimated (${r.ageSrc.grad} from graduation year, ${r.ageSrc.job} from first job). Brighter bars are 40+.`;
+  const t=r.n,seg=[["Women",r.g.f,"var(--pink)"],["Men",r.g.m,"var(--sky)"],["Non-binary",r.g.x,"#c9b6ff"],["Undetermined",r.g.u,"#5d7a99"]];
+  $("#gbar").innerHTML=seg.filter(s=>s[1]).map(([l,v,c])=>`<div style="width:${100*v/t}%;background:${c}" title="${l}: ${v}">${100*v/t>12?l+" "+Math.round(100*v/t)+"%":""}</div>`).join("");
+  $("#gsrc").innerHTML=seg.map(([l,v])=>`${l}: ${v}`).join(" · ")+"<br>How it was decided: "+Object.entries(r.gSrc).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${({ssa:"US name records",intl:"international name list",self:"self-reported",pronouns:"pronouns",honorific:"honorific"}[k]||k)} ${v}`).join(", ");
+}
+function buildMapping(){
+  map={};FIELDS.forEach(([k,,re])=>{map[k]=headers.findIndex(h=>re.test(h.trim()))});
+  if(map.name<0&&map.first>=0)map.name=map.first;
+  $("#mapping").innerHTML=`<h3>Columns</h3><div class="two">${FIELDS.map(([k,l])=>`<div><label for="m_${k}">${l}</label><select id="m_${k}" data-k="${k}"><option value="-1">— none —</option>${headers.map((h,i)=>`<option value="${i}"${map[k]===i?" selected":""}>${esc(h)}</option>`).join("")}</select></div>`).join("")}</div>`;
+}
+function loadText(t,isSample){
+  const all=parseCSV(t.replace(/^﻿/,""));if(all.length<2){$("#status").textContent="That CSV has no data rows.";return}
+  headers=all[0];rows=all.slice(1);sampleMode=!!isSample;selected=null;buildMapping();compute();
+  const miss=["company","name"].filter(k=>map[k]<0);
+  $("#status").textContent=`Loaded ${rows.length.toLocaleString()} rows.`+(miss.length?` Pick a column for: ${miss.join(", ")}.`:"");
+}
+function sample(){
+  const rnd=(s=>()=>(s=(s*1664525+1013904223)>>>0)/4294967296)(42);
+  const f=[],m=[],u=[];for(const[n,p]of Object.entries(NAMES.s)){const N=n[0].toUpperCase()+n.slice(1);if(p>=97)f.push(N);else if(p<=3)m.push(N);else if(p>35&&p<65)u.push(N)}
+  const pick=a=>a[Math.floor(rnd()*Math.min(a.length,4000))],last=["Rivera","Chen","Patel","Okafor","Nguyen","Kowalski","Haddad","Johnson","Garcia","Murphy","Singh","Kim","Larsen","Adeyemi","Rossi","Cohen","Walker","Silva"];
+  const cos=[["Northwind Systems","NWND",160,.24,33,6,.7,.15],["Harbor Analytics","HRBA",120,.46,41,10,.5,.38],["Cobalt Cloud","CBLT",140,.31,36,8,.65,.22],["Meridian Bancorp","MRDN",180,.52,45,11,.3,.27],["Larkspur Health","LRKS",110,.63,43,10,.4,.48],["Quillfeather AI","QFAI",24,.20,30,5,.8,.12]];
+  const ST=["Software Engineer","Senior Software Engineer","Data Scientist","Security Engineer","DevOps Engineer","Engineering Manager","Cloud Architect","QA Engineer","Data Engineer","Staff Engineer"],NS=["Account Executive","Recruiter","Marketing Manager","Financial Analyst","Customer Success Manager","HR Business Partner","Office Manager","Paralegal","Product Marketing Lead"];
+  const asof=cfg().asof,L=["company,ticker,name,title,bachelor_grad_year,first_job_year,pronouns"];
+  for(const[c,t,n,w0,mu,sd,stemP,ws]of cos)for(let i=0;i<n;i++){
+    const stem=rnd()<stemP,w=stem?ws:Math.min(.9,(w0-stemP*ws)/(1-stemP)),title=stem?ST[Math.floor(rnd()*ST.length)]:NS[Math.floor(rnd()*NS.length)];
+    const age=Math.round(Math.max(22,Math.min(72,mu+sd*((rnd()+rnd()+rnd()-1.5)*2)))),r=rnd(),isF=rnd()<w;
+    const first=r<.08?pick(u):isF?pick(f):pick(m),pr=rnd()<.12?(isF?"she/her":"he/him"):"";
+    const y=asof-(age-21),q=rnd(),gy=q<.8?y:"",jy=q<.8?y-Math.floor(rnd()*3):q<.95?y+Math.floor(rnd()*2):"";
+    L.push([c,t,`${first} ${last[Math.floor(rnd()*last.length)]}`,title,gy,jy,pr].join(","))}
+  return L.join("\n");
+}
+$("#file").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>loadText(fr.result,false);fr.readAsText(f)});
+$("#loadPaste").addEventListener("click",()=>loadText($("#paste").value,false));
+$("#loadSample").addEventListener("click",()=>loadText(sample(),true));
+$("#mapping").addEventListener("change",e=>{if(e.target.dataset.k){map[e.target.dataset.k]=+e.target.value;compute()}});
+document.querySelectorAll(".card input[type=number]").forEach(i=>i.addEventListener("input",compute));
+$("#rank").addEventListener("click",e=>{const b=e.target.closest(".row");if(!b)return;selected=selected===b.dataset.c?null:b.dataset.c;render();if(selected)$("#detail-band").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})});
+document.querySelectorAll("#tbl th").forEach(th=>th.addEventListener("click",()=>{const k=th.dataset.k;sortDir=sortK===k?-sortDir:(k==="company"?1:-1);sortK=k;render()}));
+$("#copyCsv").addEventListener("click",async()=>{const cols=["company","ticker","n","ageCov","medAge","s40","s55","gCov","women","stemN","stemWomen","ageScore","genScore","stemScore","score"];
+  const csv=[cols.join(",")+",low_confidence",...results.map(r=>cols.map(k=>{const v=r[k];return typeof v==="number"?(Number.isInteger(v)?v:v.toFixed(3)):`"${String(v??"").replace(/"/g,'""')}"`}).join(",")+","+r.low)].join("\n");
+  try{await navigator.clipboard.writeText(csv);$("#copyMsg").textContent="Copied."}catch(e){$("#paste").value=csv;$("#copyMsg").textContent="Clipboard blocked — results placed in the paste box above to copy by hand."}});
+fetch("names.json").then(r=>r.json()).then(j=>{NAMES=j;loadText(sample(),true)}).catch(()=>{$("#status").textContent="Couldn't load the name table; gender will show as undetermined.";loadText(sample(),true)});
+}
+</script>
+</body></html>
